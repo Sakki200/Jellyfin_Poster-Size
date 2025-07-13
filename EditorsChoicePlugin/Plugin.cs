@@ -44,7 +44,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = Name,
-                EmbeddedResourcePath = GetType().Namespace + ".web.posterSize.js"
+                EmbeddedResourcePath = GetType().Namespace + ".web.client.js"
             }
         ];
     }
