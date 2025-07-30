@@ -1,0 +1,42 @@
+<script>
+  function resizePosters() {
+    const posters = document.querySelectorAll("a.cardImageContainer");
+
+    if (posters.length > 0) {
+      posters.forEach((poster) => {
+        const newHeight = 600;
+        const newWidth = 400;
+        const style = poster.style.backgroundImage;
+
+        const urlMatch = style.match(/url\("([^"]+)"\)/);
+        if (!urlMatch) return;
+
+        let url = urlMatch[1];
+
+        const urlObj = new URL(url);
+        if (urlObj.searchParams.has("fillHeight")) {
+          urlObj.searchParams.set("fillHeight", newHeight);
+        }
+        if (urlObj.searchParams.has("fillWidth")) {
+          urlObj.searchParams.set("fillWidth", newWidth);
+        }
+        poster.style.backgroundImage = `url("${urlObj.toString()}")`;
+      });
+    }
+  }
+
+  // Exécuter dès que le DOM est prêt
+  document.addEventListener("DOMContentLoaded", () => {
+    resizePosters(); // Exécution initiale
+
+    // Puis observer les changements (Jellyfin injecte en React dynamiquement)
+    const observer = new MutationObserver(() => {
+      resizePosters();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  });
+</script>
