@@ -1,42 +1,58 @@
 <script>
-  function resizePosters() {
-    const posters = document.querySelectorAll("a.cardImageContainer");
+function resizePoster(poster) {
+  if (poster.dataset.resized === "true") return; // déjà traité
 
-    if (posters.length > 0) {
-      posters.forEach((poster) => {
-        const newHeight = 1000;
-        const newWidth = 700;
-        const style = poster.style.backgroundImage;
+  const style = poster.style.backgroundImage;
+  const urlMatch = style.match(/url\("([^"]+)"\)/);
+  if (!urlMatch) return;
 
-        const urlMatch = style.match(/url\("([^"]+)"\)/);
-        if (!urlMatch) return;
+  let url = urlMatch[1];
+  const urlObj = new URL(url);
 
-        let url = urlMatch[1];
+  const newHeight = 1000;
+  const newWidth = 700;
+  let updated = false;
 
-        const urlObj = new URL(url);
-        if (urlObj.searchParams.has("fillHeight")) {
-          urlObj.searchParams.set("fillHeight", newHeight);
-        }
-        if (urlObj.searchParams.has("fillWidth")) {
-          urlObj.searchParams.set("fillWidth", newWidth);
-        }
-        poster.style.backgroundImage = `url("${urlObj.toString()}")`;
-      });
-    }
+  if (urlObj.searchParams.has("fillHeight") && urlObj.searchParams.get("fillHeight") != newHeight) {
+    urlObj.searchParams.set("fillHeight", newHeight);
+    updated = true;
   }
 
-  // Exécuter dès que le DOM est prêt
-  document.addEventListener("DOMContentLoaded", () => {
-    resizePosters(); // Exécution initiale
+  if (urlObj.searchParams.has("fillWidth") && urlObj.searchParams.get("fillWidth") != newWidth) {
+    urlObj.searchParams.set("fillWidth", newWidth);
+    updated = true;
+  }
 
-    // Puis observer les changements (Jellyfin injecte en React dynamiquement)
-    const observer = new MutationObserver(() => {
-      resizePosters();
-    });
+  if (updated) {
+    poster.style.backgroundImage = `url("${urlObj.toString()}")`;
+  }
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  });
+  poster.dataset.resized = "true"; // marquer comme traité
+}
+
+function resizePosters() {
+  const posters = document.querySelectorAll("a.cardImageContainer");
+  posters.forEach(resizePoster);
+}
+
+// Exécution initiale
+resizePosters();
+
+// Observer les ajouts dynamiques
+const observer = new MutationObserver(resizePosters);
+observer.observe(document.body, { childList: true, subtree: true });
+
+// Intervalle de sécurité pour tous les posters déjà présents mais qui auraient été manqués
+const intervalId = setInterval(resizePosters, 500);
+
 </script>
+
+
+// POUR LE REMETTRE :
+// Activer SSH dans Synology
+// Allez dans le powershell et mettre : ssh Sakki@192.168.1.109
+// Ensuite : sudo -i
+// Ensuite : vi /volume1/@appstore/jellyfin/web/index.html
+// Coller le fichier avant la fin du </body>
+// Faire : echap :wq et entrée pour sauvegarder et quitter
+// Fermer le SSH
